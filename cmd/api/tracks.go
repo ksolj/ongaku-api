@@ -6,10 +6,44 @@ import (
 	"time"
 
 	"github.com/ksolj/ongaku-api/internal/data"
+	"github.com/ksolj/ongaku-api/internal/data/validator"
 )
 
 func (app *application) createTrackHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "create a new track")
+	var input struct {
+		Name     string   `json:"name"`
+		Duration int32    `json:"duration"`
+		Artists  []string `json:"artists"`
+		Album    string   `json:"album"`
+		// Tabs []Tab `json:"tabs"` // TODO: will be implemented later
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	track := &data.Track{
+		Name:     input.Name,
+		Duration: input.Duration,
+		Artists:  input.Artists,
+		Album:    input.Album,
+	}
+
+	v := validator.New()
+
+	if !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	if data.ValidateTrack(v, track); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	fmt.Fprintf(w, "%+v\n", input)
 }
 
 func (app *application) showTrackHandler(w http.ResponseWriter, r *http.Request) {
