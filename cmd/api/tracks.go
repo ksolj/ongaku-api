@@ -101,11 +101,11 @@ func (app *application) updateTrackHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	var input struct {
-		Name     string     `json:"name"`
-		Duration int32      `json:"duration"`
-		Artists  []string   `json:"artists"`
-		Album    string     `json:"album"`
-		Tabs     []data.Tab `json:"tabs"` // TODO: implement TAB PROPERLY!!!!
+		Name     string   `json:"name"`
+		Duration int32    `json:"duration"`
+		Artists  []string `json:"artists"`
+		Album    string   `json:"album"`
+		// Tabs     []data.Tab `json:"tabs"` // TODO: implement TAB PROPERLY!!!!
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -118,7 +118,7 @@ func (app *application) updateTrackHandler(w http.ResponseWriter, r *http.Reques
 	track.Duration = input.Duration
 	track.Artists = input.Artists
 	track.Album = input.Album
-	track.Tabs = input.Tabs
+	// track.Tabs = input.Tabs
 
 	v := validator.New()
 
@@ -134,6 +134,30 @@ func (app *application) updateTrackHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"track": track}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) deleteTrackHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readIDParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	err = app.models.Tracks.Delete(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"message": "track successfully deleted"}, nil) // May change to '204 No Content' code in the future
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

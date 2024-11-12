@@ -80,6 +80,28 @@ func (t TrackModel) Update(track *Track) error {
 }
 
 func (t TrackModel) Delete(id int64) error {
+	if id < 1 {
+		return ErrRecordNotFound
+	}
+
+	query := `
+        DELETE FROM tracks
+        WHERE id = $1`
+
+	result, err := t.Pool.Exec(context.Background(), query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected := result.RowsAffected()
+
+	// If no rows were affected, we know that the tracks table didn't contain a record
+	// with the provided ID at the moment we tried to delete it. In that case we
+	// return an ErrRecordNotFound error.
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
+
 	return nil
 }
 
