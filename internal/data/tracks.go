@@ -1,10 +1,39 @@
 package data
 
 import (
+	"context"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ksolj/ongaku-api/internal/data/validator"
 )
+
+type TrackModel struct {
+	Pool *pgxpool.Pool
+}
+
+func (m TrackModel) Insert(track *Track) error {
+	query := `
+        INSERT INTO tracks (name, duration, artists, album, tabs) 
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, created_at, version`
+
+	args := []any{track.Name, track.Duration, track.Artists, track.Album, track.Tabs}
+
+	return m.Pool.QueryRow(context.Background(), query, args...).Scan(&track.ID, &track.CreatedAt, &track.Version)
+}
+
+func (m TrackModel) Get(id int64) (*Track, error) {
+	return nil, nil
+}
+
+func (m TrackModel) Update(track *Track) error {
+	return nil
+}
+
+func (m TrackModel) Delete(id int64) error {
+	return nil
+}
 
 type Track struct {
 	ID        int64     `json:"id"`
