@@ -101,10 +101,10 @@ func (app *application) updateTrackHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	var input struct {
-		Name     string   `json:"name"`
-		Duration int32    `json:"duration"`
+		Name     *string  `json:"name"`
+		Duration *int32   `json:"duration"`
 		Artists  []string `json:"artists"`
-		Album    string   `json:"album"`
+		Album    *string  `json:"album"`
 		// Tabs     []data.Tab `json:"tabs"` // TODO: implement TAB PROPERLY!!!!
 	}
 
@@ -114,10 +114,22 @@ func (app *application) updateTrackHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	track.Name = input.Name
-	track.Duration = input.Duration
-	track.Artists = input.Artists
-	track.Album = input.Album
+	if input.Name != nil {
+		track.Name = *input.Name
+	}
+
+	if input.Duration != nil {
+		track.Duration = *input.Duration
+	}
+
+	if input.Artists != nil {
+		track.Artists = input.Artists
+	}
+
+	if input.Album != nil {
+		track.Album = *input.Album
+	}
+
 	// track.Tabs = input.Tabs
 
 	v := validator.New()
