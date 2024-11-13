@@ -22,7 +22,10 @@ func (t TrackModel) Insert(track *Track) error {
 
 	args := []any{track.Name, track.Duration, track.Artists, track.Album, track.Tabs}
 
-	return t.Pool.QueryRow(context.Background(), query, args...).Scan(&track.ID, &track.CreatedAt, &track.Version)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	return t.Pool.QueryRow(ctx, query, args...).Scan(&track.ID, &track.CreatedAt, &track.Version)
 }
 
 func (t TrackModel) Get(id int64) (*Track, error) {
@@ -37,7 +40,10 @@ func (t TrackModel) Get(id int64) (*Track, error) {
 
 	var track Track
 
-	err := t.Pool.QueryRow(context.Background(), query, id).Scan(
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := t.Pool.QueryRow(ctx, query, id).Scan(
 		&track.ID,
 		&track.CreatedAt,
 		&track.Name,
@@ -77,10 +83,13 @@ func (t TrackModel) Update(track *Track) error {
 		track.Version,
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
 	// Execute the SQL query. If no matching row could be found, we know the track
 	// version has changed (or the record has been deleted) and we return our custom
 	// ErrEditConflict error.
-	err := t.Pool.QueryRow(context.Background(), query, args...).Scan(&track.Version)
+	err := t.Pool.QueryRow(ctx, query, args...).Scan(&track.Version)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -102,7 +111,10 @@ func (t TrackModel) Delete(id int64) error {
         DELETE FROM tracks
         WHERE id = $1`
 
-	result, err := t.Pool.Exec(context.Background(), query, id)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result, err := t.Pool.Exec(ctx, query, id)
 	if err != nil {
 		return err
 	}
