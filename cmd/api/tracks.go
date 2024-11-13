@@ -141,7 +141,12 @@ func (app *application) updateTrackHandler(w http.ResponseWriter, r *http.Reques
 
 	err = app.models.Tracks.Update(track)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 

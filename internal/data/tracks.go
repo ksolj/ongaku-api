@@ -64,7 +64,7 @@ func (t TrackModel) Update(track *Track) error {
 	query := `
         UPDATE tracks 
         SET name = $1, duration = $2, artists = $3, album = $4, tabs = $5, version = version + 1
-        WHERE id = $6
+        WHERE id = $6 AND version = $7
         RETURNING version`
 
 	args := []any{
@@ -74,9 +74,23 @@ func (t TrackModel) Update(track *Track) error {
 		track.Album,
 		track.Tabs,
 		track.ID,
+		track.Version,
 	}
 
-	return t.Pool.QueryRow(context.Background(), query, args...).Scan(&track.Version)
+	// Execute the SQL query. If no matching row could be found, we know the track
+	// version has changed (or the record has been deleted) and we return our custom
+	// ErrEditConflict error.
+	err := t.Pool.QueryRow(context.Background(), query, args...).Scan(&track.Version)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrEditConflict
+		default:
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (t TrackModel) Delete(id int64) error {
