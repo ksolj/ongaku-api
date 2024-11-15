@@ -144,7 +144,38 @@ func (app *application) updateTrackHandler(w http.ResponseWriter, r *http.Reques
 		Duration *int32   `json:"duration"`
 		Artists  []string `json:"artists"`
 		Album    *string  `json:"album"`
-		// Tabs     []data.Tab `json:"tabs"` // TODO: implement TAB PROPERLY!!!!
+		Tabs     string   // No struct tag here 'cause we import this filed NOT from json!
+	}
+
+	contentType := r.Header.Get("Content-Type")
+	if strings.HasPrefix(contentType, "multipart/form-data") {
+		// Get json data from the request and convert it to the ReaderCloser to pass it to our readJSON helper.
+		jsonPart := r.FormValue("json_data")
+		jsonPartReader := strings.NewReader(jsonPart)
+		r.Body = io.NopCloser(jsonPartReader)
+
+		file, header, err := r.FormFile("file")
+		if err != nil {
+			app.badRequestResponse(w, r, fmt.Errorf("file must be provided"))
+		}
+		defer file.Close()
+
+		// This part is temporary 'cause in the future cloud object storage will be used (S3)
+		filePath := filepath.Join(uploadDir, header.Filename) // TODO: get rid of this later. Use S3
+		dst, err := os.Create(filePath)
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+		defer dst.Close()
+
+		if _, err := io.Copy(dst, file); err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+
+		fileURL := fmt.Sprintf("%s/%s", baseFileURL, header.Filename)
+		input.Tabs = fileURL
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -169,7 +200,9 @@ func (app *application) updateTrackHandler(w http.ResponseWriter, r *http.Reques
 		track.Album = *input.Album
 	}
 
-	// track.Tabs = input.Tabs
+	if input.Tabs != "" { // Not a pointer!
+		track.Tabs = input.Tabs
+	}
 
 	v := validator.New()
 
