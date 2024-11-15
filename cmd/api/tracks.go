@@ -19,7 +19,7 @@ const baseFileURL = "http://localhost:4000/tabs"
 func (app *application) createTrackHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if !strings.HasPrefix(contentType, "multipart/form-data") {
-		app.badRequestResponse(w, r, fmt.Errorf("Content-Type must be multipart/form-data"))
+		app.badRequestResponse(w, r, fmt.Errorf("content-Type must be multipart/form-data"))
 		return
 	}
 
@@ -43,7 +43,7 @@ func (app *application) createTrackHandler(w http.ResponseWriter, r *http.Reques
 
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		app.badRequestResponse(w, r, fmt.Errorf("File must be provided"))
+		app.badRequestResponse(w, r, fmt.Errorf("file must be provided"))
 	}
 	defer file.Close()
 
