@@ -138,7 +138,7 @@ type Track struct {
 	Duration  int32     `json:"duration"` // In seconds
 	Artists   []string  `json:"artists"`
 	Album     string    `json:"album"`
-	Tabs      []Tab     `json:"tabs,omitempty"` // TODO: add check for tabs not null
+	Tabs      string    `json:"tabs,omitempty"` // TODO: add check for tabs not null. ALSO Make this []string not just string
 	Version   int32     `json:"version"`        // Keep track of how many times someone updated track info (this field may be deleted in the future)
 }
 

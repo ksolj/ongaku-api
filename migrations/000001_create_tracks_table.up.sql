@@ -5,6 +5,6 @@ CREATE TABLE IF NOT EXISTS tracks (
     duration integer NOT NULL,
     artists text[] NOT NULL,
     album text NOT NULL,
-    tabs text[] NOT NULL,
+    tabs text NOT NULL,
     version integer NOT NULL DEFAULT 1
 );
