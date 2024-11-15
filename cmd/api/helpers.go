@@ -33,6 +33,15 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 	return nil
 }
 
+func (app *application) readFilenameParam(r *http.Request) (string, error) {
+	params := httprouter.ParamsFromContext(r.Context())
+	filename := params.ByName("filename")
+	if filename == "" {
+		return "", errors.New("invalid filename parameter")
+	}
+	return filename, nil
+}
+
 func (app *application) readIDParam(r *http.Request) (int64, error) {
 	params := httprouter.ParamsFromContext(r.Context())
 	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)

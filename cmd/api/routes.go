@@ -19,5 +19,6 @@ func (app *application) routes() *httprouter.Router {
 	router.HandlerFunc(http.MethodPatch, "/v1/tracks/:id", app.updateTrackHandler)
 	router.HandlerFunc(http.MethodDelete, "/v1/tracks/:id", app.deleteTrackHandler)
 
+	router.HandlerFunc(http.MethodGet, "/v1/tabs/:filename", app.getTabsHandler)
 	return router
 }
