@@ -16,6 +16,40 @@ import (
 const uploadDir = "./uploads/tabs"
 const baseFileURL = "http://localhost:4000/tabs"
 
+func (app *application) listTracksHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Name    string
+		Artists []string
+		data.Filters
+	}
+
+	v := validator.New()
+
+	qs := r.URL.Query()
+
+	input.Name = app.readString(qs, "name", "")
+	input.Artists = app.readCSV(qs, "artists", []string{})
+
+	input.Filters.Page = app.readInt(qs, "page", 1, v)
+	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
+
+	if data.ValidateFilters(v, input.Filters); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	tracks, err := app.models.Tracks.GetAll(input.Name, input.Artists, input.Filters)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"tracks": tracks}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
 func (app *application) createTrackHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if !strings.HasPrefix(contentType, "multipart/form-data") {
@@ -144,7 +178,7 @@ func (app *application) updateTrackHandler(w http.ResponseWriter, r *http.Reques
 		Duration *int32   `json:"duration"`
 		Artists  []string `json:"artists"`
 		Album    *string  `json:"album"`
-		Tabs     string   // No struct tag here 'cause we import this filed NOT from json!
+		Tabs     string   // No struct tag here 'cause we import this field NOT from json!
 	}
 
 	contentType := r.Header.Get("Content-Type")

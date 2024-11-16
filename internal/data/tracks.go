@@ -153,3 +153,50 @@ func ValidateTrack(v *validator.Validator, track *Track) {
 	v.Check(len(track.Artists) >= 1, "artists", "must contain at least 1 artist")
 	v.Check(validator.Unique(track.Artists), "artists", "must not contain duplicate values")
 }
+
+func (t TrackModel) GetAll(title string, genres []string, filters Filters) ([]*Track, error) {
+	query := `
+        SELECT id, created_at, name, duration, artists, album, tabs, version
+        FROM tracks
+        ORDER BY id`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := t.Pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	tracks := []*Track{}
+
+	for rows.Next() {
+		var track Track
+
+		err := rows.Scan(
+			&track.ID,
+			&track.CreatedAt,
+			&track.Name,
+			&track.Duration,
+			&track.Artists,
+			&track.Album,
+			&track.Tabs,
+			&track.Version,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		tracks = append(tracks, &track)
+	}
+
+	// When the rows.Next() loop has finished, call rows.Err() to retrieve any error
+	// that was encountered during the iteration.
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return tracks, nil
+}
