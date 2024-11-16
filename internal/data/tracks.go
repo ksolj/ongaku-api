@@ -158,7 +158,7 @@ func (t TrackModel) GetAll(name string, artists []string, filters Filters) ([]*T
 	query := `
         SELECT id, created_at, name, duration, artists, album, tabs, version
         FROM tracks
-        WHERE (LOWER(name) = LOWER($1) OR $1 = '') 
+        WHERE (to_tsvector('simple', name) @@ plainto_tsquery('simple', $1) OR $1 = '')  
         AND (artists @> $2 OR $2 = '{}')     
         ORDER BY id`
 
