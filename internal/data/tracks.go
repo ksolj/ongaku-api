@@ -160,12 +160,15 @@ func (t TrackModel) GetAll(name string, artists []string, filters Filters) ([]*T
         FROM tracks
         WHERE (to_tsvector('simple', name) @@ plainto_tsquery('simple', $1) OR $1 = '')  
         AND (artists @> $2 OR $2 = '{}')     
-        ORDER BY id`
+        ORDER BY id
+		LIMIT $3 OFFSET $4`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := t.Pool.Query(ctx, query, name, artists)
+	args := []any{name, artists, filters.limit(), filters.offset()}
+
+	rows, err := t.Pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
