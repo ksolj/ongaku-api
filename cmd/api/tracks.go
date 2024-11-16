@@ -38,13 +38,13 @@ func (app *application) listTracksHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	tracks, err := app.models.Tracks.GetAll(input.Name, input.Artists, input.Filters)
+	tracks, metadata, err := app.models.Tracks.GetAll(input.Name, input.Artists, input.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"tracks": tracks}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"tracks": tracks, "metadata": metadata}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

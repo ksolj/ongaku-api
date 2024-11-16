@@ -154,9 +154,9 @@ func ValidateTrack(v *validator.Validator, track *Track) {
 	v.Check(validator.Unique(track.Artists), "artists", "must not contain duplicate values")
 }
 
-func (t TrackModel) GetAll(name string, artists []string, filters Filters) ([]*Track, error) {
+func (t TrackModel) GetAll(name string, artists []string, filters Filters) ([]*Track, Metadata, error) {
 	query := `
-        SELECT id, created_at, name, duration, artists, album, tabs, version
+        SELECT count(*) OVER(), id, created_at, name, duration, artists, album, tabs, version
         FROM tracks
         WHERE (to_tsvector('simple', name) @@ plainto_tsquery('simple', $1) OR $1 = '')  
         AND (artists @> $2 OR $2 = '{}')     
@@ -170,17 +170,19 @@ func (t TrackModel) GetAll(name string, artists []string, filters Filters) ([]*T
 
 	rows, err := t.Pool.Query(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
 	defer rows.Close()
 
+	totalRecords := 0
 	tracks := []*Track{}
 
 	for rows.Next() {
 		var track Track
 
 		err := rows.Scan(
+			&totalRecords,
 			&track.ID,
 			&track.CreatedAt,
 			&track.Name,
@@ -191,7 +193,7 @@ func (t TrackModel) GetAll(name string, artists []string, filters Filters) ([]*T
 			&track.Version,
 		)
 		if err != nil {
-			return nil, err
+			return nil, Metadata{}, err
 		}
 
 		tracks = append(tracks, &track)
@@ -200,8 +202,10 @@ func (t TrackModel) GetAll(name string, artists []string, filters Filters) ([]*T
 	// When the rows.Next() loop has finished, call rows.Err() to retrieve any error
 	// that was encountered during the iteration.
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
-	return tracks, nil
+	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
+
+	return tracks, metadata, nil
 }
