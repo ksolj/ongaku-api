@@ -154,16 +154,18 @@ func ValidateTrack(v *validator.Validator, track *Track) {
 	v.Check(validator.Unique(track.Artists), "artists", "must not contain duplicate values")
 }
 
-func (t TrackModel) GetAll(title string, genres []string, filters Filters) ([]*Track, error) {
+func (t TrackModel) GetAll(name string, artists []string, filters Filters) ([]*Track, error) {
 	query := `
         SELECT id, created_at, name, duration, artists, album, tabs, version
         FROM tracks
+        WHERE (LOWER(name) = LOWER($1) OR $1 = '') 
+        AND (artists @> $2 OR $2 = '{}')     
         ORDER BY id`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := t.Pool.Query(ctx, query)
+	rows, err := t.Pool.Query(ctx, query, name, artists)
 	if err != nil {
 		return nil, err
 	}
