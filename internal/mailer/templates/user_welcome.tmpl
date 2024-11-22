@@ -4,6 +4,12 @@
 Hi,
 
 Just a test message...
+
+Send PUT request to `/v1/users/activated` with the following JSON body to activate your account:
+
+{"token": "{{.activationToken}}"}
+
+One-time use and expires in 1 day...
 {{end}}
 
 {{define "htmlBody"}}
@@ -18,6 +24,11 @@ Just a test message...
 <body>
     <p>Hi,</p>
     <p>Just a test message...</p>
+    <p>Send PUT request to `/v1/users/activated` with the following JSON body to activate your account:</p>
+        <pre><code>
+    {"token": "{{.activationToken}}"}
+    </code></pre>
+    <p>One-time use and expires in 1 day...</p>
 </body>
 
 </html>

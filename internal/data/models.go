@@ -13,12 +13,14 @@ var (
 
 type Models struct {
 	Tracks TrackModel
+	Tokens TokenModel
 	Users  UserModel
 }
 
 func NewModels(pool *pgxpool.Pool) Models {
 	return Models{
 		Tracks: TrackModel{Pool: pool},
+		Tokens: TokenModel{Pool: pool},
 		Users:  UserModel{Pool: pool},
 	}
 }
