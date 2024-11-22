@@ -18,7 +18,8 @@ type Mailer struct {
 }
 
 func New(host string, port int, username, password, sender string) (Mailer, error) {
-	client, err := mail.NewClient(host, mail.WithPort(port), mail.WithUsername(username), mail.WithPassword(password), mail.WithTimeout(5*time.Second))
+	// client, err := mail.NewClient(host, mail.WithPort(port), mail.WithUsername(username), mail.WithPassword(password), mail.WithTimeout(5*time.Second))
+	client, err := mail.NewClient(host, mail.WithPort(port), mail.WithTimeout(5*time.Second), mail.WithTLSPortPolicy(mail.NoTLS)) // TEMPORARY
 	if err != nil {
 		return Mailer{}, err
 	}
@@ -56,8 +57,16 @@ func (m Mailer) Send(recipient, templateFile string, data any) error {
 	msg := mail.NewMsg()
 
 	// careful here cuz IgnoreInvalid versions of funcs is being used
-	msg.SetAddrHeaderIgnoreInvalid(mail.HeaderTo, recipient)
-	msg.SetAddrHeaderIgnoreInvalid(mail.HeaderFrom, m.sender)
+	err = msg.To(recipient)
+	if err != nil {
+		return err
+	}
+	// msg.SetAddrHeaderIgnoreInvalid(mail.HeaderTo, recipient)
+	err = msg.From(m.sender)
+	if err != nil {
+		return err
+	}
+	// msg.SetAddrHeaderIgnoreInvalid(mail.HeaderFrom, m.sender)
 
 	msg.Subject(subject.String())
 	msg.SetBodyString(mail.TypeTextPlain, plainBody.String())

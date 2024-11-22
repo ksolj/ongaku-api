@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -39,6 +40,7 @@ type application struct {
 	logger *jsonlog.Logger
 	models data.Models
 	mailer mailer.Mailer
+	wg     sync.WaitGroup
 }
 
 func main() {
@@ -55,11 +57,11 @@ func main() {
 	flag.IntVar(&cfg.limiter.burst, "limiter-burst", 4, "Rate limiter maximum burst")
 	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "Enable rate limiter")
 
-	flag.StringVar(&cfg.smtp.host, "smtp-host", "smtp.mailtrap.io", "SMTP host")
+	flag.StringVar(&cfg.smtp.host, "smtp-host", "192.168.50.235", "SMTP host")
 	flag.IntVar(&cfg.smtp.port, "smtp-port", 25, "SMTP port")
-	flag.StringVar(&cfg.smtp.username, "smtp-username", "TODO: PLACE MY DATA HERE", "SMTP username")
-	flag.StringVar(&cfg.smtp.password, "smtp-password", "TODO: PLACE MY DATA HERE", "SMTP password")
-	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "TODO: PLACE MY DATA HERE", "SMTP sender")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", "not in use for now", "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", "not in use for now", "SMTP password")
+	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Ongaku API <no-reply@ongaku.ksolj.net>", "SMTP sender")
 
 	flag.Parse()
 
