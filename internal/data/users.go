@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -100,7 +99,6 @@ func (m UserModel) Insert(user *User) error {
 
 	err := m.Pool.QueryRow(ctx, query, args...).Scan(&user.ID, &user.CreatedAt, &user.Version)
 	if err != nil {
-		log.Println(err.Error())
 		switch {
 		case err.Error() == `ERROR: duplicate key value violates unique constraint "users_email_key" (SQLSTATE 23505)`:
 			return ErrDuplicateEmail
