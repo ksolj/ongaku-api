@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -33,6 +34,9 @@ type config struct {
 		password string
 		sender   string
 	}
+	cors struct {
+		trustedOrigins []string
+	}
 }
 
 type application struct {
@@ -49,8 +53,6 @@ func main() {
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
-	// Read the DSN value from the db-dsn command-line flag into the config struct. We
-	// default to using our development DSN if no flag is provided.
 	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("ONGAKU_DB_DSN"), "PostgreSQL DSN")
 
 	flag.Float64Var(&cfg.limiter.rps, "limiter-rps", 2, "Rate limiter maximum requests per second")
@@ -62,6 +64,11 @@ func main() {
 	flag.StringVar(&cfg.smtp.username, "smtp-username", "not in use for now", "SMTP username")
 	flag.StringVar(&cfg.smtp.password, "smtp-password", "not in use for now", "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Ongaku API <no-reply@ongaku.ksolj.net>", "SMTP sender")
+
+	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(val string) error {
+		cfg.cors.trustedOrigins = strings.Fields(val)
+		return nil
+	})
 
 	flag.Parse()
 
