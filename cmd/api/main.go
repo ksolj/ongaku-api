@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"expvar"
 	"flag"
 	"os"
 	"strings"
@@ -86,6 +87,8 @@ func main() {
 	if err != nil {
 		logger.PrintFatal(err, nil)
 	}
+
+	expvar.NewString("version").Set(version)
 
 	app := &application{
 		config: cfg,
