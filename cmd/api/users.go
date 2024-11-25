@@ -58,6 +58,14 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// For now we instantly give write permission for activated user.\
+	// Later on prob some kind of rating system will be implemented. (or not lol)
+	err = app.models.Permissions.AddForUser(user.ID, "tracks:write")
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
 	err = app.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

@@ -22,6 +22,18 @@ type PermissionModel struct {
 	Pool *pgxpool.Pool
 }
 
+func (m PermissionModel) AddForUser(userID int64, codes ...string) error {
+	query := `
+        INSERT INTO users_permissions
+        SELECT $1, permissions.id FROM permissions WHERE permissions.code = ANY($2)`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := m.Pool.Exec(ctx, query, userID, codes)
+	return err
+}
+
 func (m PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
 	query := `
         SELECT permissions.code
