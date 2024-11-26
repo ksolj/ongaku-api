@@ -2,17 +2,39 @@ package main
 
 import (
 	"errors"
+	"expvar"
 	"fmt"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/felixge/httpsnoop"
 	"github.com/ksolj/ongaku-api/internal/data"
 	"github.com/ksolj/ongaku-api/internal/data/validator"
 	"golang.org/x/time/rate"
 )
+
+func (app *application) metrics(next http.Handler) http.Handler {
+	totalRequestsReceived := expvar.NewInt("total_requests_received")
+	totalResponsesSent := expvar.NewInt("total_responses_sent")
+	totalProcessingTimeMicroseconds := expvar.NewInt("total_processing_time_μs")
+	totalResponsesSentByStatus := expvar.NewMap("total_responses_sent_by_status")
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		totalRequestsReceived.Add(1)
+
+		metrics := httpsnoop.CaptureMetrics(next, w, r)
+
+		totalResponsesSent.Add(1)
+
+		totalProcessingTimeMicroseconds.Add(metrics.Duration.Microseconds())
+
+		totalResponsesSentByStatus.Add(strconv.Itoa(metrics.Code), 1)
+	})
+}
 
 func (app *application) enableCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
