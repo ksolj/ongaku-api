@@ -11,10 +11,10 @@ import (
 	"github.com/ksolj/ongaku-api/internal/data/validator"
 )
 
-// Additional scopes will be added in the future
 const (
 	ScopeActivation     = "activation"
 	ScopeAuthentication = "authentication"
+	ScopePasswordReset  = "password-reset"
 )
 
 type Token struct {
