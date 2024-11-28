@@ -1,0 +1,26 @@
+{{define "subject"}}Activate your Greenlight account{{end}}
+
+{{define "plainBody"}}
+Send a `PUT /v1/users/activated` request with the following JSON body to activate your account:
+
+{"token": "{{.activationToken}}"}
+
+One-time use and expires in 1 day...
+{{end}}
+
+{{define "htmlBody"}}
+<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  </head>
+  <body>
+    <p>Send a <code>PUT /v1/users/activated</code> request with the following JSON body to activate your account:</p>
+    <pre><code>
+    {"token": "{{.activationToken}}"}
+    </code></pre> 
+    <p>One-time use and expires in 1 day...</p>
+  </body>
+</html>
+{{end}}
