@@ -82,7 +82,7 @@ build/api:
 # PRODUCTION
 # ==================================================================================== #
 
-production_host_ip = "45.55.49.87"
+production_host_ip = "" # TODO: put here the actual ip of the server lol
 
 ## production/connect: connect to the production server
 .PHONY: production/connect
