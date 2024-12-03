@@ -82,12 +82,10 @@ build/api:
 # PRODUCTION
 # ==================================================================================== #
 
-production_host_ip = "" # TODO: put here the actual ip of the server lol
-
 ## production/connect: connect to the production server
 .PHONY: production/connect
 production/connect:
-	ssh kuso@${production_host_ip}
+	ssh kuso@${PRODUCTION_HOST_IP}
 
 ## production/deploy/api: deploy the api to production
 .PHONY: production/deploy/api
