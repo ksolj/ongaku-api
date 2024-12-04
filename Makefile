@@ -90,11 +90,12 @@ production/connect:
 ## production/deploy/api: deploy the api to production
 .PHONY: production/deploy/api
 production/deploy/api:
-	rsync -P ./bin/linux_amd64/api kuso@${production_host_ip}:~
-	rsync -rP --delete ./migrations kuso@${production_host_ip}:~
-	rsync -P ./remote/production/api.service kuso@${production_host_ip}:~
-	ssh -t kuso@${production_host_ip} '\
+	rsync -P ./bin/linux_amd64/api kuso@${PRODUCTION_HOST_IP}:~
+	rsync -rP --delete ./migrations kuso@${PRODUCTION_HOST_IP}:~
+	rsync -P ./remote/production/api.service kuso@${PRODUCTION_HOST_IP}:~
+	ssh -t kuso@${PRODUCTION_HOST_IP} '\
 		migrate -path ~/migrations -database $$ONGAKU_DB_DSN up \
 		&& sudo mv ~/api.service /etc/systemd/system/ \
 		&& sudo systemctl enable api \
 		&& sudo systemctl restart api \
+	'

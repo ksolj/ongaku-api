@@ -7,7 +7,7 @@ set -eu
 
 TIMEZONE=Europe/Moscow
 
-read -p "Enter password for greenlight DB user: " DB_PASSWORD
+read -p "Enter password for ongaku DB user: " DB_PASSWORD
 
 export LC_ALL=en_US.UTF-8 
 
