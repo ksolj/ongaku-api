@@ -1,0 +1,8 @@
+{
+  email Stebakov-a.a@yandex.ru
+}
+
+ongaku.ddns.net {
+  respond /debug/* "Not Permitted" 403
+  reverse_proxy localhost:4000
+}

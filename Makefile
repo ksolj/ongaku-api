@@ -93,9 +93,12 @@ production/deploy/api:
 	rsync -P ./bin/linux_amd64/api kuso@${PRODUCTION_HOST_IP}:~
 	rsync -rP --delete ./migrations kuso@${PRODUCTION_HOST_IP}:~
 	rsync -P ./remote/production/api.service kuso@${PRODUCTION_HOST_IP}:~
+	rsync -P ./remote/production/Caddyfile kuso@${PRODUCTION_HOST_IP}:~
 	ssh -t kuso@${PRODUCTION_HOST_IP} '\
 		migrate -path ~/migrations -database $$ONGAKU_DB_DSN up \
 		&& sudo mv ~/api.service /etc/systemd/system/ \
 		&& sudo systemctl enable api \
 		&& sudo systemctl restart api \
+		&& sudo mv ~/Caddyfile /etc/caddy/ \
+		&& sudo systemctl reload caddy \
 	'
