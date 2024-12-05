@@ -137,7 +137,6 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// TODO: accept tokens over HTTPS connection only!!!
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Name     string `json:"name"`

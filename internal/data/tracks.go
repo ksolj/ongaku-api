@@ -147,7 +147,7 @@ func ValidateTrack(v *validator.Validator, track *Track) {
 	v.Check(len(track.Name) <= 500, "name", "must not be more than 500 bytes long")
 
 	v.Check(track.Duration != 0, "duration", "must be provided")
-	v.Check(track.Duration > 0, "duration", "must be a positive integer") // TODO: possible overflow???
+	v.Check(track.Duration > 0, "duration", "must be a positive integer")
 
 	v.Check(track.Artists != nil, "artists", "must be provided")
 	v.Check(len(track.Artists) >= 1, "artists", "must contain at least 1 artist")
