@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 var (
@@ -18,9 +19,9 @@ type Models struct {
 	Users       UserModel
 }
 
-func NewModels(pool *pgxpool.Pool) Models {
+func NewModels(pool *pgxpool.Pool, redis *redis.Client) Models {
 	return Models{
-		Tracks:      TrackModel{Pool: pool},
+		Tracks:      TrackModel{Pool: pool, Redis: redis},
 		Permissions: PermissionModel{Pool: pool},
 		Tokens:      TokenModel{Pool: pool},
 		Users:       UserModel{Pool: pool},

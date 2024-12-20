@@ -14,7 +14,7 @@ User=kuso
 Group=kuso
 EnvironmentFile=/etc/environment
 WorkingDirectory=/home/kuso
-ExecStart=/home/kuso/api -port=4000 -db-dsn=${ONGAKU_DB_DSN} -env=production
+ExecStart=/home/kuso/api -port=4000 -sql-dsn=${ONGAKU_DB_DSN} -redis-dsn=${ONGAKU_REDIS_DSN} -env=production
 
 Restart=on-failure
 RestartSec=5

@@ -23,7 +23,8 @@ confirm:
 ## run/api: run the cmd/api application
 .PHONY: run/api
 run/api:
-	@go run ./cmd/api -db-dsn=${ONGAKU_DB_DSN}
+	@go run ./cmd/api -sql-dsn=${ONGAKU_DB_DSN} -redis-dsn=${ONGAKU_REDIS_DSN}
+
 
 ## db/psql: connect to the database using psql
 .PHONY: db/psql

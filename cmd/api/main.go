@@ -16,6 +16,7 @@ import (
 	"github.com/ksolj/ongaku-api/internal/jsonlog"
 	"github.com/ksolj/ongaku-api/internal/mailer"
 	"github.com/ksolj/ongaku-api/internal/vcs"
+	"github.com/redis/go-redis/v9"
 )
 
 var (
@@ -26,7 +27,8 @@ type config struct {
 	port int
 	env  string // Name of the current operating environment for the application (development, staging, production, etc.)
 	db   struct {
-		dsn string
+		sql   string
+		redis string
 	}
 	limiter struct {
 		rps     float64
@@ -59,7 +61,8 @@ func main() {
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.sql, "sql-dsn", "", "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.redis, "redis-dsn", "", "Redis DSN")
 
 	flag.Float64Var(&cfg.limiter.rps, "limiter-rps", 2, "Rate limiter maximum requests per second")
 	flag.IntVar(&cfg.limiter.burst, "limiter-burst", 4, "Rate limiter maximum burst")
@@ -87,13 +90,21 @@ func main() {
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo) // maybe use zerolog in the future???
 
-	pool, err := openDB(cfg)
+	pool, err := openSQL(cfg)
 	if err != nil {
 		logger.PrintFatal(err, nil)
 	}
 
 	defer pool.Close()
-	logger.PrintInfo("database connection pool established", nil)
+	logger.PrintInfo("SQL database connection pool established", nil)
+
+	rdb, err := openInMemoryDB(cfg)
+	if err != nil {
+		logger.PrintFatal(err, nil)
+	}
+
+	defer rdb.Close()
+	logger.PrintInfo("Redis connection established", nil)
 
 	mailer, err := mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender)
 	if err != nil {
@@ -119,7 +130,7 @@ func main() {
 	app := &application{
 		config: cfg,
 		logger: logger,
-		models: data.NewModels(pool),
+		models: data.NewModels(pool, rdb),
 		mailer: mailer,
 	}
 
@@ -129,8 +140,8 @@ func main() {
 	}
 }
 
-func openDB(cfg config) (*pgxpool.Pool, error) {
-	pool, err := pgxpool.New(context.Background(), cfg.db.dsn)
+func openSQL(cfg config) (*pgxpool.Pool, error) {
+	pool, err := pgxpool.New(context.Background(), cfg.db.sql)
 	if err != nil {
 		return nil, err
 	}
@@ -148,4 +159,23 @@ func openDB(cfg config) (*pgxpool.Pool, error) {
 	}
 
 	return pool, nil
+}
+
+func openInMemoryDB(cfg config) (*redis.Client, error) {
+	opts, err := redis.ParseURL(cfg.db.redis)
+	if err != nil {
+		return nil, err
+	}
+
+	rdb := redis.NewClient(opts)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err = rdb.Ping(ctx).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	return rdb, nil
 }

@@ -3,15 +3,19 @@ package data
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ksolj/ongaku-api/internal/data/validator"
+	"github.com/redis/go-redis/v9"
 )
 
 type TrackModel struct {
-	Pool *pgxpool.Pool
+	Pool  *pgxpool.Pool
+	Redis *redis.Client
 }
 
 func (t TrackModel) Insert(track *Track) error {
@@ -25,7 +29,16 @@ func (t TrackModel) Insert(track *Track) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	return t.Pool.QueryRow(ctx, query, args...).Scan(&track.ID, &track.CreatedAt, &track.Version)
+	err := t.Pool.QueryRow(ctx, query, args...).Scan(&track.ID, &track.CreatedAt, &track.Version)
+	if err != nil {
+		return err
+	}
+
+	// completely ignoring all errors from Redis
+	key := fmt.Sprintf("track:%d", track.ID)
+	t.Redis.Del(ctx, key)
+
+	return nil
 }
 
 func (t TrackModel) Get(id int64) (*Track, error) {
@@ -33,17 +46,28 @@ func (t TrackModel) Get(id int64) (*Track, error) {
 		return nil, ErrRecordNotFound
 	}
 
+	key := fmt.Sprintf("track:%d", id)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var track Track
+
+	// completely ignoring all errors from Redis
+	trackCache, err := t.Redis.Get(ctx, key).Result()
+	if nil == err {
+		err := json.Unmarshal([]byte(trackCache), &track)
+		if nil == err {
+			return &track, nil
+		}
+	}
+
 	query := `
         SELECT id, created_at, name, duration, artists, album, tabs, version
         FROM tracks
         WHERE id = $1`
 
-	var track Track
-
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	err := t.Pool.QueryRow(ctx, query, id).Scan(
+	err = t.Pool.QueryRow(ctx, query, id).Scan(
 		&track.ID,
 		&track.CreatedAt,
 		&track.Name,
@@ -61,6 +85,12 @@ func (t TrackModel) Get(id int64) (*Track, error) {
 		default:
 			return nil, err
 		}
+	}
+
+	// completely ignoring all errors from Redis
+	serializedTrack, err := json.Marshal(track)
+	if nil == err {
+		t.Redis.Set(ctx, key, serializedTrack, 15*time.Minute)
 	}
 
 	return &track, nil
@@ -99,6 +129,10 @@ func (t TrackModel) Update(track *Track) error {
 		}
 	}
 
+	// completely ignoring all errors from Redis
+	key := fmt.Sprintf("track:%d", track.ID)
+	t.Redis.Del(ctx, key)
+
 	return nil
 }
 
@@ -127,6 +161,10 @@ func (t TrackModel) Delete(id int64) error {
 	if rowsAffected == 0 {
 		return ErrRecordNotFound
 	}
+
+	// completely ignoring all errors from Redis
+	key := fmt.Sprintf("track:%d", id)
+	t.Redis.Del(ctx, key)
 
 	return nil
 }
