@@ -26,6 +26,7 @@ services:
     image: postgres:17
     volumes:
       - ./db_setup:/docker-entrypoint-initdb.d
+      - ./db_data:/var/lib/postgresql/data
     expose:
       - "5432"
     environment:

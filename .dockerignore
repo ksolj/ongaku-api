@@ -6,3 +6,4 @@ Makefile
 bin
 remote
 migrations
+db_data

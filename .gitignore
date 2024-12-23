@@ -2,3 +2,4 @@
 .envrc
 bin/
 .env
+db_data
