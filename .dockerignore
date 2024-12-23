@@ -7,3 +7,4 @@ bin
 remote
 migrations
 db_data
+db_setup
