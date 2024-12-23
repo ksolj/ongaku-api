@@ -1,6 +1,7 @@
 services:
   app:
     build:
+      context: .
       dockerfile: Dockerfile
     ports:
       - 4000:${API_PORT}
