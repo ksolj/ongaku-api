@@ -1,6 +1,7 @@
 .git
 .envrc
 .gitignore
+.env
 Makefile
 bin
 remote

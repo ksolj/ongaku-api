@@ -10,5 +10,5 @@ RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags='-s -w' -o=./bin/api
 FROM gcr.io/distroless/static
 
 WORKDIR /app
-COPY --from=builder /build/api ./api
+COPY --from=builder /build/bin/api ./api
 ENTRYPOINT ["/app/api"]

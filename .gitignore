@@ -1,3 +1,4 @@
 *.gp5
 .envrc
 bin/
+.env

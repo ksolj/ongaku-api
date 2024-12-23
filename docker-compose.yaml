@@ -1,4 +1,27 @@
 services:
+  app:
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - 4000:${API_PORT}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    command: ["-port=${API_PORT}", 
+              "-env=${API_ENV}",
+              "-sql-dsn=${API_SQL_DSN}",
+              "-redis-dsn=${API_REDIS_DSN}",
+              "-limiter-rps=${API_LIMITER_RPS}",
+              "-limiter-burst=${API_LIMITER_BURST}",
+              "-limiter-enabled=${API_LIMITER_ENABLED}",
+              "-smtp-host=${API_SMTP_HOST}",
+              "-smtp-username=${API_SMTP_USERNAME}",
+              "-smtp-password=${API_SMTP_PASSWORD}",
+              "-smtp-sender=${API_SMTP_SENDER}"]
   db:
     image: postgres:17
     volumes:
@@ -6,11 +29,25 @@ services:
     expose:
       - "5432"
     environment:
-      POSTGRES_DB: "ongaku"
-      POSTGRES_USER: "ongaku"
-      POSTGRES_PASSWORD: ""
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     healthcheck:
-      test: pg_isready -U ongaku -d ongaku
+      test: pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.4.1-alpine
+    # environment:
+    #   - REDIS_PASSWORD=${REDIS_PASSWORD}
+    #   - REDIS_USER=${REDIS_USER}
+    #   - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
+    expose:
+      - "6379"
+    healthcheck:
+      test: redis-cli --raw incr ping
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,4 +59,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: ["-path", "/migrations", "-database", "postgres://ongaku:pass_example@db/ongaku?sslmode=disable", "up"]
+    command: ["-path", "/migrations", "-database", 
+    "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DB}?sslmode=disable", "up"]
+  
+  smtp:
+    image: changemakerstudiosus/papercut-smtp:latest
+    ports:
+    - "8080:80"
+    expose:
+      - "25"
+
