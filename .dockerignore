@@ -1,7 +1,6 @@
 .git
 .envrc
 .gitignore
-go.sum
 Makefile
 bin
 remote

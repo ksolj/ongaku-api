@@ -1,14 +1,14 @@
-ARG GO_VERSION=1.21
+ARG GO_VERSION=1.23
 
 FROM golang:${GO_VERSION}-alpine AS builder
 
 WORKDIR /build
 COPY . .
 RUN go mod download
-RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags='-s' -o=./api ./cmd/api
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags='-s -w' -o=./bin/api ./cmd/api
 
 FROM gcr.io/distroless/static
 
 WORKDIR /app
 COPY --from=builder /build/api ./api
-CMD ["/app/api"]
+ENTRYPOINT ["/app/api"]
