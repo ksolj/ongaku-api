@@ -22,12 +22,13 @@ Ongaku (i.e. music) API allows users to upload their guitar tabs to the database
 6. **Versioning**
 7. **Panic recovery**
 
-### Other Features
+### Other Features and used technologies
 1. **Migrations**
 2. **Makefile**
 3. **Configuration** (Either by .env file or command-line arguments)
 4. **Dockerfile (multi-stage build) and Docker Compose (migrations run at startup)**
-5. **Caddy as a reverse proxy**
+5. **Caddy as the reverse proxy**
+6. **PostgreSQL as the primary database**
 
 ## QuickStart
 1. Install these:
