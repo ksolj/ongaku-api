@@ -17,13 +17,36 @@ import (
 	"golang.org/x/time/rate"
 )
 
+// refactor in the future (maybe)
+func (app *application) sendLogsToKafka(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		endpoint := r.URL.Path
+		method := r.Method
+		query := r.URL.RawQuery
+		userAgent := r.UserAgent()
+
+		msg := []byte(fmt.Sprintf("Endpoint: %s, Method: %s, Query: %s, User-Agent: %s", endpoint, method, query, userAgent))
+
+		go func() {
+			err := app.pushCommentToQueue("logs", msg)
+			if err != nil {
+				app.logger.PrintError(err, nil)
+			}
+		}()
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (app *application) metrics(next http.Handler) http.Handler {
+
 	totalRequestsReceived := expvar.NewInt("total_requests_received")
 	totalResponsesSent := expvar.NewInt("total_responses_sent")
 	totalProcessingTimeMicroseconds := expvar.NewInt("total_processing_time_μs")
 	totalResponsesSentByStatus := expvar.NewMap("total_responses_sent_by_status")
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		totalRequestsReceived.Add(1)
 
 		metrics := httpsnoop.CaptureMetrics(next, w, r)

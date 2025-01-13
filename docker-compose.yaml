@@ -12,6 +12,8 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      kafka:
+        condition: service_started
     command: ["-port=${API_PORT}", 
               "-env=${API_ENV}",
               "-sql-dsn=${API_SQL_DSN}",
@@ -53,6 +55,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  
+  kafka:
+    image: confluentinc/cp-kafka:7.8.0
+    expose:
+      - "9092"
+    depends_on:
+      - zookeeper
+    environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.8.0
+    expose:
+      - "2181"
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
 
   migrate:
     image: migrate/migrate

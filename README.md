@@ -12,6 +12,7 @@ Ongaku (i.e. music) API allows users to upload their guitar tabs to the database
       - **IP-based rate limiting** (Token Bucket Algorithm)
       - **Authentication** (Stateful tokens)
       - **Permission-based authorization** (for certain operations)
+      - **Sending requests' data to Kafka**
 2. **Caching** (via Redis)
 3. **SMTP**:
       - **Welcome message**
@@ -29,6 +30,7 @@ Ongaku (i.e. music) API allows users to upload their guitar tabs to the database
 4. **Dockerfile (multi-stage build) and Docker Compose (migrations run at startup)**
 5. **Caddy as the reverse proxy**
 6. **PostgreSQL as the primary database**
+7. **Kafka for gathering data**
 
 ## QuickStart
 1. Install these:
@@ -67,7 +69,8 @@ Also feel free to type ```make help``` to see what is has to offer
 ## Tools
 1. SQL Database - PostgreSQL
 2. Cache - Redis
-3. Migrations - golang-migrate
-4. Container - Docker
-5. SMTP server for testing purposes - Papercut SMTP
-6. Reverse proxy - Caddy
+3. Kafka
+4. Migrations - golang-migrate
+5. Container - Docker
+6. SMTP server for testing purposes - Papercut SMTP
+7. Reverse proxy - Caddy

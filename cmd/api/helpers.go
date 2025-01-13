@@ -10,11 +10,51 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/IBM/sarama"
 	"github.com/julienschmidt/httprouter"
 	"github.com/ksolj/ongaku-api/internal/data/validator"
 )
 
 type envelope map[string]any
+
+func connectProducer(brokersUrl []string) (sarama.SyncProducer, error) {
+	config := sarama.NewConfig()
+	config.Producer.Return.Successes = true
+	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.Producer.Retry.Max = 5
+
+	conn, err := sarama.NewSyncProducer(brokersUrl, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return conn, nil
+}
+
+// refactor in the future (maybe)
+func (app *application) pushCommentToQueue(topic string, message []byte) error {
+	brokersUrl := []string{"kafka:9092"}
+	producer, err := connectProducer(brokersUrl)
+	if err != nil {
+		return err
+	}
+
+	defer producer.Close()
+
+	msg := &sarama.ProducerMessage{
+		Topic: topic,
+		Value: sarama.StringEncoder(message),
+	}
+
+	partition, offset, err := producer.SendMessage(msg)
+	if err != nil {
+		return err
+	}
+
+	app.logger.PrintInfo(fmt.Sprintf("Message is stored in topic(%s)/partition(%d)/offset(%d)\n", topic, partition, offset), nil)
+
+	return nil
+}
 
 func (app *application) readString(qs url.Values, key string, defaultValue string) string {
 	s := qs.Get(key)
